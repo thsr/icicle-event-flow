@@ -4,10 +4,12 @@
   <meta charset="utf-8">
   <title>Partition - Icicle</title>
   <style>
-  
+  * {
+    font-family: "Arial";
+  }
   .node {
     fill: #ddd;
-    /*stroke: #fff;*/
+    stroke: #fff;
   }
   
   .label {
@@ -401,20 +403,37 @@
  ]
 }
 </script>
+
+
+
+
+
+<div id="icicle-chart"></div>
+
+
+
+
+
+
 <script>
-
 var width = window.innerWidth - 100,
-    height = window.innerHeight / 6;
+    height = window.innerHeight - 100;
 
-var color = d3.scale.category20c();
+var x = d3.scale.linear()
+    .range([0, width])
 
-var svg = d3.select("body").append("svg")
+var y = d3.scale.linear()
+    .range([0, height])
+
+var color = d3.scale.linear().domain([0,1]).range(["yellow", "green"]);
+
+var svg = d3.select("#icicle-chart").append("svg")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
 
 var partition = d3.layout.partition()
     .size([width, height])
-    .value(function(d) { return d.size; });
+    .value(function(d) { return d.size })
 
 var tooltip = d3.select("body")
   .append("div")
@@ -423,24 +442,51 @@ var tooltip = d3.select("body")
   .style("visibility", "hidden")
   .style("background", "white")
 
-var root = JSON.parse(document.getElementById('data').innerHTML);
-var nodes = partition.nodes(root);
+var root = JSON.parse(document.getElementById('data').innerHTML)
+var nodes = partition.nodes(root)
 
 svg.selectAll(".node")
     .data(nodes)
   .enter().append("rect")
     .attr("class", "node")
-    .attr("x", function(d) { return d.x })
-    .attr("y", function(d) { return d.y })
-    .attr("width", function(d) { return d.dx })
-    .attr("height", function(d) { return d.dy })
-    .style("fill", function(d) { return color((d.children ? d : d.parent).name) })
-    .on("mouseover", function(d) { return tooltip.style("visibility", "visible") })
-    .on("mousemove", function(d) { return tooltip.style("top", (event.pageY - 10) + "px")
-                                                 .style("left", (event.pageX + 10) + "px")
-                                                 .text( d.name ) })
-    .on("mouseout", function() { return tooltip.style("visibility", "hidden") })
-    .on("click", function(d) { console.log(d) })
+    .attr("x", function(d) { return d.y })
+    .attr("y", function(d) { return d.x })
+    .attr("width", function(d) { return d.dy })
+    .attr("height", function(d) { return d.dx })
+    // .style("fill", function(d) { return color(d.parent ? d.value : d.value / d.parent.value) })
+    // .style("fill", function(d) { return color((d.children ? d : d.parent).name) })
+    .on("mouseover", tootltipMouseover)
+    .on("mousemove", tootltipMousemove)
+    .on("mouseout", tootltipMouseout)
+    // .on("click", function(d) { console.log(d) })
+    // .on("click", clicked)
+    // .on("mouseover", function(d) { console.log(d.parent ? d.value : d.value / d.parent.value) })
+
+function clicked(d) {
+  x.domain([d.x, d.x + d.dx])
+  y.domain([d.y, 1]).range([d.y ? 20 : 0, height])
+
+  rect.transition()
+      .duration(750)
+      .attr("x", function(d) { return x(d.x) })
+      .attr("y", function(d) { return y(d.y) })
+      .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) })
+      .attr("height", function(d) { return y(d.y + d.dy) - y(d.y) });
+}
+
+
+function tootltipMouseover(d) { return tooltip.style("visibility", "visible") }
+function tootltipMousemove(d) {
+  return tooltip.style("top", (event.pageY - 10) + "px")
+                .style("left", (event.pageX + 10) + "px")
+                .text( d.name )
+}
+function tootltipMouseout(d) { return tooltip.style("visibility", "hidden") }
+
+
+
+
+
 
   // svg.selectAll(".label")
   //     .data(nodes.filter(function(d) { return d.dx > 6; }))
@@ -450,7 +496,40 @@ svg.selectAll(".node")
   //     .attr("transform", function(d) { return "translate(" + (d.x + d.dx / 2) + "," + (d.y + d.dy / 2) + ")rotate(90)"; })
   //     .text(function(d) { return d.name; });
 
+
+
+
+
+
+// var partition = d3.layout.partition()
+//     .children(function(d) { return isNaN(d.value) ? d3.entries(d.value) : null; })
+//     .value(function(d) { return d.value; });
+
+// var svg = d3.select("body").append("svg")
+//     .attr("width", width)
+//     .attr("height", height);
+
+// var rect = svg.selectAll("rect");
+
+// d3.json("readme.json", function(error, root) {
+//   if (error) throw error;
+
+//   rect = rect
+//       .data(partition(d3.entries(root)[0]))
+//     .enter().append("rect")
+//       .attr("x", function(d) { return x(d.x); })
+//       .attr("y", function(d) { return y(d.y); })
+//       .attr("width", function(d) { return x(d.dx); })
+//       .attr("height", function(d) { return y(d.dy); })
+//       .attr("fill", function(d) { return color((d.children ? d : d.parent).key); })
+//       .on("click", clicked);
+// });
+
+
 </script>
-  <div id="chart"></div>
+
+
+
+
 </body>
 </html>
