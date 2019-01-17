@@ -1,21 +1,24 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<title>Partition - Icicle</title>
-<style>
 
-.node {
-  fill: #ddd;
-  stroke: #fff;
-}
-
-.label {
-  font: 10px sans-serif;
-  text-anchor: middle;
-}
-
-</style>
+<head>
+  <meta charset="utf-8">
+  <title>Partition - Icicle</title>
+  <style>
+  
+  .node {
+    fill: #ddd;
+    /*stroke: #fff;*/
+  }
+  
+  .label {
+    font: 10px sans-serif;
+    text-anchor: middle;
+  }
+  
+  </style>
+  <script src="d3.v3.min.js"></script>
+</head>
 <body>
-<script src="d3.v3.min.js"></script>
 <script type="application/json" id="data">
 {
  "name": "flare",
@@ -413,55 +416,31 @@ var partition = d3.layout.partition()
     .size([width, height])
     .value(function(d) { return d.size; });
 
-// d3.json("flare.json", function(error, root) {
-//   if (error) throw error;
-
-//   var nodes = partition.nodes(root);
-
-//   svg.selectAll(".node")
-//       .data(nodes)
-//     .enter().append("rect")
-//       .attr("class", "node")
-//       .attr("x", function(d) { return d.x; })
-//       .attr("y", function(d) { return d.y; })
-//       .attr("width", function(d) { return d.dx; })
-//       .attr("height", function(d) { return d.dy; })
-//       .style("fill", function(d) { return color((d.children ? d : d.parent).name); });
-
-//   svg.selectAll(".label")
-//       .data(nodes.filter(function(d) { return d.dx > 6; }))
-//     .enter().append("text")
-//       .attr("class", "label")
-//       .attr("dy", ".35em")
-//       .attr("transform", function(d) { return "translate(" + (d.x + d.dx / 2) + "," + (d.y + d.dy / 2) + ")rotate(90)"; })
-//       .text(function(d) { return d.name; });
-// });
 var tooltip = d3.select("body")
   .append("div")
   .style("position", "absolute")
   .style("z-index", "10")
   .style("visibility", "hidden")
-  .text(function(d) { return 'hgfg'; });
+  .style("background", "white")
 
-  var root = JSON.parse(document.getElementById('data').innerHTML);
-  var nodes = partition.nodes(root);
+var root = JSON.parse(document.getElementById('data').innerHTML);
+var nodes = partition.nodes(root);
 
-  svg.selectAll(".node")
-      .data(nodes)
-    .enter().append("rect")
-      .attr("class", "node")
-      .attr("x", function(d) { return d.x; })
-      .attr("y", function(d) { return d.y; })
-      .attr("width", function(d) { return d.dx; })
-      .attr("height", function(d) { return d.dy; })
-      .style("fill", function(d) { return color((d.children ? d : d.parent).name); })
-      .on("mouseover", function(){return tooltip.style("visibility", "visible");})
-      .on("mousemove", function(d) {return tooltip
-                                          .style("top", (event.pageY-10)+"px")
-                                          .style("left",(event.pageX+10)+"px")
-                                          .text( d.name )
-                              })
-      .on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+svg.selectAll(".node")
+    .data(nodes)
+  .enter().append("rect")
+    .attr("class", "node")
+    .attr("x", function(d) { return d.x })
+    .attr("y", function(d) { return d.y })
+    .attr("width", function(d) { return d.dx })
+    .attr("height", function(d) { return d.dy })
+    .style("fill", function(d) { return color((d.children ? d : d.parent).name) })
+    .on("mouseover", function(d) { return tooltip.style("visibility", "visible") })
+    .on("mousemove", function(d) { return tooltip.style("top", (event.pageY - 10) + "px")
+                                                 .style("left", (event.pageX + 10) + "px")
+                                                 .text( d.name ) })
+    .on("mouseout", function() { return tooltip.style("visibility", "hidden") })
+    .on("click", function(d) { console.log(d) })
 
   // svg.selectAll(".label")
   //     .data(nodes.filter(function(d) { return d.dx > 6; }))
@@ -472,3 +451,6 @@ var tooltip = d3.select("body")
   //     .text(function(d) { return d.name; });
 
 </script>
+  <div id="chart"></div>
+</body>
+</html>
