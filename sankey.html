@@ -7,7 +7,9 @@
 }
 
 #chart {
-  height: 500px;
+  width: 75vw;
+  height: 75vh;
+  background: #ddd;
 }
 
 .node rect {
@@ -23,12 +25,12 @@
 
 .link {
   fill: none;
-  stroke: #000;
-  stroke-opacity: .2;
+  stroke: #ccc;
+  stroke-opacity: .5;
 }
 
 .link:hover {
-  stroke-opacity: .5;
+  stroke-opacity: 1;
 }
 </style>
 <body>
@@ -38,8 +40,6 @@
 <div id="chart"></div>
 	
 <script>
-
-
 function getData() {
     return {
         "nodes": [{
@@ -50,8 +50,7 @@ function getData() {
         "name": "login:success"
     }, {
         "node": 2,
-        "name": "registration:attempt",
-        "xPos": 1
+        "name": "registration:attempt"
     }, {
         "node": 3,
         "name": "registration:created"
@@ -65,91 +64,109 @@ function getData() {
         "links": [{
         "source": 0,
         "target": 1,
-        "value": 5
+        "value": 12545
     }, {
         "source": 1,
         "target": 3,
-        "value": 2
+        "value": 23467
     }, {
         "source": 2,
         "target": 3,
-        "value": 3
+        "value": 35676
     }, {
         "source": 2,
         "target": 4,
-        "value": 1
+        "value": 1711
     }, {
         "source": 2,
         "target": 5,
-        "value": 1
+        "value": 43178
     }]};
 }
 
-var margin = {top: 1, right: 1, bottom: 6, left: 1},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+
+var chart = d3.select("#chart");
+
+
+var margin = {top: 10, right: 10, bottom: 10, left: 10},
+    width = chart.node().getBoundingClientRect().width - margin.left - margin.right,
+    height = chart.node().getBoundingClientRect().height - margin.top - margin.bottom;
 
 var formatNumber = d3.format(",.0f"),
     format = function(d) { return formatNumber(d) + " users"; },
-    color = d3.scale.category20c();
+    color = d3.scale.category20c()
 
-var svg = d3.select("#chart").append("svg")
+var svg = chart.append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
+    .style("background", "#eee")
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 var sankey = d3.sankey()
     .nodeWidth(20)
-    .nodePadding(70)
+    .nodePadding(200)
     .size([width, height]);
 
 var path = sankey.link();
 
-var renderSankey = function(energy) {
+var renderSankey = function(dataInput) {
 
-    
-  window.width = 700;
+
+
+  var tooltip = d3.select("body")
+    .append("div")
+    .style("position", "absolute")
+    .style("z-index", "10")
+    .style("visibility", "hidden")
+    .style("padding", "4px")
+    .style("color", "#ddd")
+    .style("background", "#333")
+
+  // window.width = 700;
   sankey
-      .nodes(energy.nodes)
-      .links(energy.links)
+      .nodes(dataInput.nodes)
+      .links(dataInput.links)
       .layout(42);
 
+
+  /*=============================
+  =            links            =
+  =============================*/
   var link = svg.append("g").selectAll(".link")
-      .data(energy.links)
+      .data(dataInput.links)
     .enter().append("path")
       .attr("class", "link")
       .attr("d", path)
       .style("stroke-width", function(d) { return Math.max(1, d.dy); })
       .sort(function(a, b) { return b.dy - a.dy; });
 
-/*   link.append("title")
-      .text(function(d) { return d.source.name + " → " + d.target.name + "\n" + format(d.value); }); */
 
-link.on("mouseover", linkTootltipMouseover)
-    .on("mousemove", linkTootltipMousemove)
-    .on("mouseout", linkTootltipMouseout)
+  /*====================================
+  =            link tooltip            =
+  ====================================*/
+  link.on("mouseover", linkTootltipMouseover)
+      .on("mousemove", linkTootltipMousemove)
+      .on("mouseout", linkTootltipMouseout)
 
-var tooltip = d3.select("body")
-  .append("div")
-  .style("position", "absolute")
-  .style("z-index", "10")
-  .style("visibility", "hidden")
-  .style("padding", "4px")
-  .style("color", "#ddd")
-  .style("background", "#333")
-
-function linkTootltipMouseover(d) { return tooltip.style("visibility", "visible") }
-function linkTootltipMousemove(d) {
-  return tooltip.style("top", (event.pageY + 20) + "px")
-                .style("left", (event.pageX + 20) + "px")
-                .text( d.source.name + " → " + d.target.name)
-}
-function linkTootltipMouseout(d) { return tooltip.style("visibility", "hidden") }
+  function linkTootltipMouseover(d) { return tooltip.style("visibility", "visible") }
+  function linkTootltipMousemove(d) { 
+    return tooltip.style("top", (event.pageY + 20) + "px")
+                  .style("left", (event.pageX + 20) + "px")
+                  .html( d.source.name + ' → ' + d.target.name + '<br />'
+                    + d.source.value + ' → ' + d.value + '<br />'
+                    + 'Conversion: ' + parseFloat((d.value / d.source.value)*100).toFixed(1) + '%' )
+  }
+  function linkTootltipMouseout(d) { return tooltip.style("visibility", "hidden") }
 
 
+
+
+  /*============================
+  =            nodes           =
+  ============================*/
   var node = svg.append("g").selectAll(".node")
-      .data(energy.nodes)
+      .data(dataInput.nodes)
     .enter().append("g")
       .attr("class", "node")
       .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
@@ -164,9 +181,6 @@ function linkTootltipMouseout(d) { return tooltip.style("visibility", "hidden") 
       .style("fill", function(d) { return d.color = color(d.name); })
       .style("stroke", function(d) { return d3.rgb(d.color).darker(2); })
   
-/*   node.append("title")
-      .text(function(d) { return d.name + "\n" + format(d.value); });
-   */
   node.append("text")
       .attr("x", -6)
       .attr("y", function(d) { return d.dy / 2; })
@@ -178,25 +192,80 @@ function linkTootltipMouseout(d) { return tooltip.style("visibility", "hidden") 
       .attr("x", 6 + sankey.nodeWidth())
       .attr("text-anchor", "start");
 
-node.on("mouseover", nodeTootltipMouseover)
-    .on("mousemove", nodeTootltipMousemove)
-    .on("mouseout", nodeTootltipMouseout);
+  /*====================================
+  =            node tooltip            =
+  ====================================*/
+  node.on("mouseover.tootltip", nodeTootltipMouseover)
+      .on("mousemove.tootltip", nodeTootltipMousemove)
+      .on("mouseout.tootltip", nodeTootltipMouseout);
 
 
-function nodeTootltipMouseover(d) { return tooltip.style("visibility", "visible") }
-function nodeTootltipMousemove(d) {
-  return tooltip.style("top", (event.pageY - 10) + "px")
-                .style("left", (event.pageX + 10) + "px")
-                .text( d.name );
-}
-function nodeTootltipMouseout(d) { return tooltip.style("visibility", "hidden") }
+  function nodeTootltipMouseover(d) { return tooltip.style("visibility", "visible") }
+  function nodeTootltipMousemove(d) {
+    return tooltip.style("top", (event.pageY - 10) + "px")
+                  .style("left", (event.pageX + 10) + "px")
+                  .text( d.name + "\n" + d.value );
+  }
+  function nodeTootltipMouseout(d) { return tooltip.style("visibility", "hidden") }
 
+
+
+
+  /*======================================
+  =            dragging nodes            =
+  ======================================*/
   function dragmove(d) {
     d3.select(this).attr("transform", "translate(" + d.x + "," + (d.y = Math.max(0, Math.min(height - d.dy, d3.event.y))) + ")");
     sankey.relayout();
     link.attr("d", path);
   }
+
+
+
+  /*===================================
+  =       node fade effect            =
+  ===================================*/
+  node.on("mouseover.fadeeffect", nodeFadeEffectMouseover);
+  node.on("mouseout.fadeeffect", nodeFadeEffectMouseout); 
+        
+  function nodeFadeEffectMouseover(d) {
+        link.filter(function(s) { return d.node != s.source.node && d.node != s.target.node; })
+            .transition()        
+            .duration(10)
+            .style("opacity", .1);
+
+        node.transition()        
+            .duration(10)
+            .style("opacity", .1);
+        node.filter(function(s) { return d.targetLinks.map(o=>o.source.node).indexOf(s.node) > -1 })
+            .transition()        
+            .duration(10)
+            .style("opacity", 1);
+        node.filter(function(s) { return d.sourceLinks.map(o=>o.target.node).indexOf(s.node) > -1 })
+            .transition()        
+            .duration(10)
+            .style("opacity", 1);
+        node.filter(function(s) { return d.node == s.node })
+            .transition()        
+            .duration(10)
+            .style("opacity", 1);
+  }
+  function nodeFadeEffectMouseout(d) {
+      link.transition()        
+          .duration(10)
+          .style("opacity", 1);
+
+      node.transition()        
+          .duration(10)
+          .style("opacity", 1);
+  }
+
+
+
 }
+
+
+
 
 renderSankey(getData());
 
